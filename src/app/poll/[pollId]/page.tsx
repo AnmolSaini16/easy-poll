@@ -1,8 +1,20 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 import PollRootWrapper from "@/components/poll/PollRootWrapper";
+import { IPoll } from "@/types";
+
+export async function generateStaticParams() {
+  const supabase = createClient();
+
+  const { data: polls } = await supabase
+    .from("poll")
+    .select("id")
+    .filter("end_date", "gte", new Date().toISOString())
+    .limit(10);
+  return polls as IPoll[];
+}
 
 export async function generateMetadata({
   params,
