@@ -51,8 +51,6 @@ export default async function PollPage({
     .eq("id", params.pollId)
     .single();
 
-  console.log(error);
-
   if (error) {
     throw new Error(error.message);
   }
