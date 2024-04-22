@@ -26,8 +26,8 @@ const PollsList = ({ polls, isExpired = false }: Props) => {
                 <CardTitle className="truncate">{poll.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>
-                  created on{" "}
+                <p className=" text-muted-foreground">
+                  Created{" "}
                   {new Date(poll.created_at).toLocaleString(undefined, {
                     weekday: "short",
                     year: "numeric",
