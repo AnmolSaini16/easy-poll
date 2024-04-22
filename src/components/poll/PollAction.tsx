@@ -71,7 +71,7 @@ const PollAction = ({ poll }: Props) => {
     );
   };
 
-  const deleteVotePromise = async () => {
+  const deletePollPromise = async () => {
     const { error } = await deletePoll(poll.id);
     if (error) {
       console.error(error.message);
@@ -82,10 +82,10 @@ const PollAction = ({ poll }: Props) => {
   };
 
   const handleDeletePoll = () => {
-    toast.promise(deleteVotePromise(), {
+    toast.promise(deletePollPromise(), {
       loading: "Deleting poll...",
       success: "Succesfully deleted poll",
-      error: "Failed to delete vote",
+      error: "Failed to delete poll",
     });
   };
 
@@ -168,7 +168,7 @@ const EditPollModal = ({
 
   const { isDirty } = form.formState;
 
-  const deleteVotePromise = async (payload: {
+  const editPollPromise = async (payload: {
     title: string;
     end_date: Date;
     description?: string;
@@ -184,7 +184,7 @@ const EditPollModal = ({
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
     toast.promise(
-      deleteVotePromise({
+      editPollPromise({
         title: data.title,
         end_date: data.end_date,
         description: data.description,

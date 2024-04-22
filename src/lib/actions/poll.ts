@@ -32,7 +32,7 @@ export const createPoll = async (payload: {
 }): Promise<void> => {
   const supabase = createClient();
 
-  const { data: voteId, error } = await supabase.rpc("create_poll", {
+  const { data: pollId, error } = await supabase.rpc("create_poll", {
     title: payload.title,
     end_date: new Date(payload.end_date).toISOString(),
     options: payload.poll_options,
@@ -43,7 +43,7 @@ export const createPoll = async (payload: {
     console.error(error);
     throw new Error("Fail to create poll");
   } else {
-    redirect("/poll/" + voteId);
+    redirect("/poll/" + pollId);
   }
 };
 

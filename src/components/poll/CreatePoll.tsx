@@ -140,7 +140,7 @@ export default function CreatePollForm() {
           render={() => (
             <FormItem>
               <div>
-                <FormLabel className="text-base">Vote Options*</FormLabel>
+                <FormLabel className="text-base">Poll Options*</FormLabel>
                 <FormDescription>
                   Once created you cannot edit your poll options. Please double
                   check 📌.
