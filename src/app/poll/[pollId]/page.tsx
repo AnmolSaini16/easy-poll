@@ -21,7 +21,7 @@ export async function generateMetadata({
 }: {
   params: { pollId: string };
 }): Promise<Metadata> {
-  const supabase = createClient();
+  const supabase = createClientBrowser();
 
   const { data: poll } = await supabase
     .from("poll")
@@ -43,7 +43,7 @@ export default async function PollPage({
 }: {
   params: { pollId: string };
 }) {
-  const supabase = createClient();
+  const supabase = createClientBrowser();
 
   const { data: poll, error } = await supabase
     .from("poll")
