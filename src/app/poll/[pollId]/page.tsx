@@ -45,11 +45,17 @@ export default async function PollPage({
 }) {
   const supabase = createClient();
 
-  const { data: poll } = await supabase
+  const { data: poll, error } = await supabase
     .from("poll")
     .select("*,users(*)")
     .eq("id", params.pollId)
     .single();
+
+  console.log(error);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 
   if (!poll) {
     return redirect("/404");
