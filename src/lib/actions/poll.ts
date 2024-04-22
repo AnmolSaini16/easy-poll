@@ -26,9 +26,9 @@ export async function ExpiredPollsList() {
 
 export const createPoll = async (payload: {
   title: string;
-  description?: string;
   end_date: Date;
   poll_options: { option: string; count: number }[];
+  description?: string;
 }): Promise<void> => {
   const supabase = createClient();
 
@@ -63,4 +63,24 @@ export const deletePoll = (pollId: string) => {
   const supabase = createClient();
 
   return supabase.from("poll").delete().eq("id", pollId);
+};
+
+export const updatePollDetails = (
+  payload: {
+    title: string;
+    end_date: Date;
+    description?: string;
+  },
+  pollId: string
+) => {
+  const supabase = createClient();
+
+  return supabase
+    .from("poll")
+    .update({
+      title: payload.title,
+      end_date: new Date(payload.end_date).toISOString(),
+      description: payload.description ?? "",
+    })
+    .eq("id", pollId);
 };

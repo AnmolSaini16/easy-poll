@@ -1,10 +1,14 @@
 "use client";
 
-import { Pencil, Share, Trash } from "lucide-react";
+import { CalendarIcon, Pencil, Share, Trash } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import * as z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 
 import { Tables } from "@/types/supabase";
 import {
@@ -25,7 +29,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
-import { deletePoll } from "@/lib/actions/poll";
+import { deletePoll, updatePollDetails } from "@/lib/actions/poll";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
+import { DialogHeader, DialogFooter } from "../ui/dialog";
+import { Input } from "../ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { Textarea } from "../ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { cn, nextWeek } from "@/lib/utils";
+import { Calendar } from "../ui/calendar";
 
 type Props = {
   poll: Tables<"poll">;
@@ -34,6 +58,7 @@ type Props = {
 const PollAction = ({ poll }: Props) => {
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
 
   const handleShare = () => {
     toast.promise(
@@ -74,7 +99,7 @@ const PollAction = ({ poll }: Props) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowEditModal(true)}>
             <Pencil className="mr-2 h-4 w-4" />
             <span>Edit</span>
           </DropdownMenuItem>
@@ -109,8 +134,178 @@ const PollAction = ({ poll }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EditPollModal
+        key={`${showEditModal}`}
+        poll={poll}
+        showEditModal={showEditModal}
+        setShowEditModal={setShowEditModal}
+      />
     </>
   );
 };
 
 export default PollAction;
+
+const EditPollModal = ({
+  poll,
+  showEditModal,
+  setShowEditModal,
+}: {
+  poll: Tables<"poll">;
+  showEditModal: boolean;
+  setShowEditModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
+  const router = useRouter();
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      title: poll.title,
+      description: poll?.description ?? "",
+      end_date: new Date(poll.end_date),
+    },
+  });
+
+  const { isDirty } = form.formState;
+
+  const deleteVotePromise = async (payload: {
+    title: string;
+    end_date: Date;
+    description?: string;
+  }) => {
+    const { error } = await updatePollDetails(payload, poll.id);
+    if (error) {
+      console.error(error.message);
+      throw new Error(error.message);
+    } else {
+      router.refresh();
+    }
+  };
+
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    toast.promise(
+      deleteVotePromise({
+        title: data.title,
+        end_date: data.end_date,
+        description: data.description,
+      }),
+      {
+        loading: "Saving Changes...",
+        success: "Changes saved",
+        error: "Failed to edit changes",
+      }
+    );
+    setShowEditModal(false);
+  };
+
+  return (
+    <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+      <DialogContent className="">
+        <DialogHeader>
+          <DialogTitle>Edit poll</DialogTitle>
+          <DialogDescription>
+            Make changes to your poll here. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid w-full items-center gap-6"
+            id="edit-poll"
+          >
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title*</FormLabel>
+                  <FormControl>
+                    <Input placeholder="title of your poll " {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descriptions</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="descriptions of your poll"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="end_date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>End date*</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > nextWeek() || date < new Date()
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" id="edit-poll" disabled={!isDirty}>
+                Save changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const FormSchema = z.object({
+  title: z
+    .string()
+    .min(2, { message: "Title should be minimum of 2 characters " })
+    .max(200, { message: "Title has a maximum characters of 200" }),
+  description: z
+    .string()
+    .max(500, { message: "Title has a maximum characters of 500" })
+    .optional(),
+  end_date: z.date(),
+});

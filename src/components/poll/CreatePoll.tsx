@@ -31,13 +31,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { createPoll } from "@/lib/actions/poll";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 
-interface CreatePollForm {
-  title: string;
-  description?: string;
-  poll_options: string[];
-  end_date: string;
-}
-
 const FormSchema = z.object({
   poll_options: z
     .array(z.string())
