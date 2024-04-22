@@ -56,8 +56,6 @@ export async function middleware(request: NextRequest) {
 
   const user = await supabase.auth.getUser();
 
-  console.log(request.nextUrl.pathname);
-
   if (
     !user?.data?.user &&
     request.nextUrl.pathname.startsWith("/create-poll")

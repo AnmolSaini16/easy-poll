@@ -7,7 +7,7 @@ export default function PollPageLoading() {
       <div className="space-y-4 w-full">
         <Skeleton className=" h-8 w-48 rounded-md" />
 
-        <div className="flex justify-between flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row">
+        <div className="flex justify-between flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row gap-2">
           <h4 className="text-lg">
             <Skeleton className=" h-5 w-64 rounded-md" />
           </h4>

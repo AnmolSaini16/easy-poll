@@ -27,19 +27,20 @@ export async function ExpiredPollsList() {
 export const createPoll = async (payload: {
   title: string;
   description?: string;
-  end_date: string;
+  end_date: Date;
   poll_options: { option: string; count: number }[];
 }): Promise<void> => {
   const supabase = createClient();
 
   const { data: voteId, error } = await supabase.rpc("create_poll", {
     title: payload.title,
-    end_date: payload.end_date,
+    end_date: new Date(payload.end_date).toISOString(),
     options: payload.poll_options,
     description: payload.description ?? "",
   });
 
   if (error) {
+    console.error(error);
     throw new Error("Fail to create poll");
   } else {
     redirect("/poll/" + voteId);
@@ -56,4 +57,10 @@ export const updatePoll = (payload: {
     update_id: payload.update_id,
     option_name: payload.option_name,
   });
+};
+
+export const deletePoll = (pollId: string) => {
+  const supabase = createClient();
+
+  return supabase.from("poll").delete().eq("id", pollId);
 };

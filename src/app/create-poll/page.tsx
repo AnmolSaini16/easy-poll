@@ -1,4 +1,5 @@
 import React from "react";
+import { Metadata } from "next";
 
 import {
   Card,
@@ -8,6 +9,10 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import CreatePollForm from "@/components/poll/CreatePoll";
+
+export const metadata: Metadata = {
+  title: "Create your Poll",
+};
 
 const CreatePollPage = () => {
   return (

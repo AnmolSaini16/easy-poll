@@ -51,7 +51,7 @@ const FormSchema = z.object({
     .max(200, { message: "Title has a maximum characters of 200" }),
   description: z
     .string()
-    .max(200, { message: "Title has a maximum characters of 200" })
+    .max(500, { message: "Title has a maximum characters of 500" })
     .optional(),
   end_date: z.date(),
 });

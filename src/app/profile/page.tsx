@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import UserPollsTable from "@/components/poll/UserPollsTable";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Profile",
+};
 
 export default async function ProfilePage({
   searchParams,

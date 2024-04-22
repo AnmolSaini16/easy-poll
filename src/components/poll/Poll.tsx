@@ -74,14 +74,13 @@ const Poll = ({ poll }: Props) => {
   const castVote = async (optionName: string) => {
     toast.promise(castVotePromise(optionName), {
       loading: "Voting for " + optionName + "...",
-      error: (error) => "Fail to vote for " + optionName,
+      error: "Fail to vote for " + optionName,
       success: "Successfully vote for " + optionName,
     });
   };
 
   const disablePoll = Boolean(user_poll_log) || !userData || !isActive;
 
-  console.log(highestOptions);
   return (
     <>
       {!userData && isActive && (
@@ -110,8 +109,8 @@ const Poll = ({ poll }: Props) => {
                 className={cn(
                   "border rounded-lg px-2 py-4 space-y-2 bg-background transition-all delay-100",
                   !disablePoll &&
-                    "hover:scale-105 hover:-translate-y-1 hover:cursor-pointer hover:border-yellow-500",
-                  highestOptionAfterPollExpired && "border-yellow-500"
+                    "hover:scale-105 hover:-translate-y-1 hover:cursor-pointer hover:border-primary",
+                  highestOptionAfterPollExpired && "border-primary"
                 )}
               >
                 <div className="flex justify-between">

@@ -3,19 +3,26 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { LogOut, Palette, Plus, User as UserIcon } from "lucide-react";
+import { User } from "@supabase/supabase-js";
 
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -25,6 +32,7 @@ type Props = {
 const UserDropdown = ({ user }: Props) => {
   const router = useRouter();
   const supabase = createClient();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -66,17 +74,51 @@ const UserDropdown = ({ user }: Props) => {
           <DropdownMenuItem
             onClick={() => router.push(`/profile?id=${user.id}`)}
           >
+            <UserIcon className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={() => router.push("/create-poll")}>
+            <Plus className="mr-2 h-4 w-4" />
             Create Poll
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Palette className="mr-2 h-4 w-4" />
+            <span>Appearance</span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent>
+              <DropdownMenuCheckboxItem
+                checked={theme === "light"}
+                onClick={() => setTheme("light")}
+              >
+                Light
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={theme === "dark"}
+                onClick={() => setTheme("dark")}
+              >
+                Dark
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={theme === "system"}
+                onClick={() => setTheme("system")}
+              >
+                System
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

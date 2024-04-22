@@ -21,6 +21,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { isPollActive } from "@/lib/utils";
+import PollAction from "./PollAction";
 
 type Props = {
   userPolls: Array<Tables<"poll">> | null;
@@ -70,7 +71,9 @@ const UserPollsTable = ({ userPolls }: Props) => {
                   {new Date(poll.created_at).toDateString()}
                 </TableCell>
                 <TableCell>{new Date(poll.end_date).toDateString()}</TableCell>
-                <TableCell></TableCell>
+                <TableCell>
+                  <PollAction poll={poll} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -82,7 +85,7 @@ const UserPollsTable = ({ userPolls }: Props) => {
             </h1>
             <Link href="/create-poll">
               <Button>
-                <Plus className="h-4 w-4 mr-1" /> Create
+                <Plus className="h-4 w-4 mr-1" /> Create your poll
               </Button>
             </Link>
           </div>
