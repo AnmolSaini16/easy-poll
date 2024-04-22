@@ -1,6 +1,14 @@
 "use client";
 
-export default function Error() {
+import { Button } from "@/components/ui/button";
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return (
     <div className="flex items-center flex-col h-full space-y-10">
       <div className="w-[480px]">
@@ -17,7 +25,10 @@ export default function Error() {
         </p>
       </div>
 
-      <h1 className="font-semibold text-xl">Try Refreshing...</h1>
+      {error.message.length > 0 && (
+        <h1 className="text-xl">Error: {error.message}</h1>
+      )}
+      <Button onClick={() => reset()}>Try Refreshing</Button>
     </div>
   );
 }

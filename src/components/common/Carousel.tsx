@@ -27,7 +27,7 @@ const CarouselCompoenent = (props: Props) => {
           delay: 4000,
         }),
       ]}
-      className="w-full"
+      className="w-full min-h-[300px]"
     >
       <CarouselContent>
         {config.map((item, index) => (
