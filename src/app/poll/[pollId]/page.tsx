@@ -1,27 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
-import { createClient as createClientBrowser } from "@/lib/supabase/client";
-import { redirect } from "next/navigation";
-import PollRootWrapper from "@/components/poll/PollRootWrapper";
-import { IPoll } from "@/types";
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export async function generateStaticParams() {
-  const supabase = createClientBrowser();
-
-  const { data: polls } = await supabase
-    .from("poll")
-    .select("id")
-    .filter("end_date", "gte", new Date().toISOString())
-    .limit(10);
-  return polls as IPoll[];
-}
+import { createClient } from "@/lib/supabase/server";
+import PollRootWrapper from "@/components/poll/PollRootWrapper";
 
 export async function generateMetadata({
   params,
 }: {
   params: { pollId: string };
 }): Promise<Metadata> {
-  const supabase = createClientBrowser();
+  const supabase = createClient();
 
   const { data: poll } = await supabase
     .from("poll")
@@ -43,7 +31,7 @@ export default async function PollPage({
 }: {
   params: { pollId: string };
 }) {
-  const supabase = createClientBrowser();
+  const supabase = createClient();
 
   const { data: poll, error } = await supabase
     .from("poll")
