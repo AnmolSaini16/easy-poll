@@ -1,15 +1,19 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
+
 import LoginButton from "@/app/auth/compoenents/LoginButton";
 import UserDropdown from "./UserDropdown";
+import { useUser } from "@/hooks/useUser";
 
-export default async function NavActions() {
-  const supabase = createClient();
+export default function NavActions() {
+  const { data: user, isLoading, isFetching } = useUser();
 
-  const { data } = await supabase.auth.getUser();
+  if (isLoading || isFetching) {
+    return <></>;
+  }
 
-  if (!data?.user) {
+  if (!user) {
     return <LoginButton />;
   }
 
-  return <UserDropdown user={data?.user} />;
+  return <UserDropdown user={user} />;
 }
