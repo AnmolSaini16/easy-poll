@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { IPoll } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 
 type Props = {
@@ -22,11 +22,9 @@ const PollsList = ({ polls, isExpired = false }: Props) => {
         return (
           <Link href={"/poll/" + poll.id} key={poll.id}>
             <Card className="shadow-md transition-all delay-100 scale-100 relative md:hover:-translate-y-1 hover:cursor-pointer hover:border-primary">
-              <CardHeader>
+              <CardHeader className="space-y-4">
                 <CardTitle className="truncate">{poll.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className=" text-muted-foreground">
+                <CardDescription>
                   Created{" "}
                   {new Date(poll.created_at).toLocaleString(undefined, {
                     weekday: "short",
@@ -34,8 +32,8 @@ const PollsList = ({ polls, isExpired = false }: Props) => {
                     month: "long",
                     day: "numeric",
                   })}
-                </p>
-              </CardContent>
+                </CardDescription>
+              </CardHeader>
               <Badge
                 variant="outline"
                 className=" absolute -top-2 -right-2 border-green-500 text-sm bg-background"
