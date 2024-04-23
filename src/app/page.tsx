@@ -1,13 +1,18 @@
+import { Suspense } from "react";
+
 import CarouselCompoenent from "@/components/common/Carousel";
 import PollListLoading from "@/components/common/PollListLoading";
 import PollsList from "@/components/common/PollsList";
 import { ActivePollLists, ExpiredPollsList } from "@/lib/actions/poll";
-import { Suspense } from "react";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = createClient();
+  const { data } = await supabase.auth.getUser();
+
   return (
     <div className="space-y-10">
-      <CarouselCompoenent />
+      <CarouselCompoenent user={data?.user} />
 
       <h1 className="text-2xl font-bold text-primary">Active Public Polls</h1>
       <Suspense fallback={<PollListLoading />}>

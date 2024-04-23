@@ -134,8 +134,12 @@ const Poll = ({ pollId }: Props) => {
               {user_poll_log && (
                 <Alert className="bg-transaparent w-fit mx-auto">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle className="text-yellow-500">
-                    You Voted for {user_poll_log?.option} on{" "}
+                  <AlertTitle>
+                    You voted for{" "}
+                    <span className="text-primary">
+                      {user_poll_log?.option}{" "}
+                    </span>
+                    on{" "}
                     {new Date(
                       user_poll_log?.created_at ?? ""
                     ).toLocaleDateString()}

@@ -4,14 +4,19 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { Button } from "../ui/button";
-import { useUser } from "@/hooks/useUser";
 
-const CarouselCompoenent = () => {
-  const { data: user } = useUser();
+import { cn } from "@/lib/utils";
+import { User } from "@supabase/supabase-js";
 
+const CarouselCompoenent = ({ user }: { user: User | null }) => {
   return (
     <div className="w-full flex items-center justify-center">
-      <div className="grid gap-y-4 grid-rows-3 text-center sm:w-[80%] md:w-[70%]">
+      <div
+        className={cn(
+          "grid gap-y-3 text-center sm:w-[80%] md:w-[70%]",
+          user ? "grid-rows-3" : "grid-rows-2"
+        )}
+      >
         <h1 className="font-bold text-4xl">
           Create instant, real-time polls for free!
         </h1>
