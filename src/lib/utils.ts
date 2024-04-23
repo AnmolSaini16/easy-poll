@@ -26,7 +26,13 @@ export function isPollActive(endDate: string): boolean {
 }
 
 export function getHighestOptions(
-  options: { option: string; count: number }[]
+  options: {
+    count: number;
+    created_at: string;
+    id: string;
+    option: string;
+    poll_id: string;
+  }[]
 ) {
   let highestCount = 0;
   let highestOptions: string[] = [];

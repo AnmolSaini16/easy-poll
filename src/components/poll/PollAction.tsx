@@ -2,13 +2,14 @@
 
 import { CalendarIcon, Pencil, Share, Trash } from "lucide-react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { Tables } from "@/types/supabase";
 import {
@@ -75,7 +76,7 @@ const PollAction = ({ poll }: Props) => {
     const { error } = await deletePoll(poll.id);
     if (error) {
       console.error(error.message);
-      throw new Error(error.message);
+      throw new Error();
     } else {
       router.refresh();
     }
@@ -157,6 +158,7 @@ const EditPollModal = ({
   setShowEditModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const router = useRouter();
+  const queryCache = useQueryClient();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -176,8 +178,9 @@ const EditPollModal = ({
     const { error } = await updatePollDetails(payload, poll.id);
     if (error) {
       console.error(error.message);
-      throw new Error(error.message);
+      throw new Error();
     } else {
+      queryCache.invalidateQueries({ queryKey: ["poll-" + poll.id] });
       router.refresh();
     }
   };

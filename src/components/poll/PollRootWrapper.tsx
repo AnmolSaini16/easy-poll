@@ -13,7 +13,7 @@ const PollRootWrapper = ({ poll }: Props) => {
     <div className="space-y-8">
       <PollDetails poll={poll} />
 
-      <Poll poll={poll} />
+      <Poll pollId={poll?.id} />
     </div>
   );
 };

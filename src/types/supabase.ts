@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      comments: {
-        Row: {
-          comment: string | null
-          created_at: string
-          id: string
-          poll_id: string | null
-          sent_by: string
-        }
-        Insert: {
-          comment?: string | null
-          created_at?: string
-          id?: string
-          poll_id?: string | null
-          sent_by: string
-        }
-        Update: {
-          comment?: string | null
-          created_at?: string
-          id?: string
-          poll_id?: string | null
-          sent_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_comments_poll_id_fkey"
-            columns: ["poll_id"]
-            isOneToOne: false
-            referencedRelation: "poll"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "public_comments_sent_by_fkey"
-            columns: ["sent_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       poll: {
         Row: {
           created_at: string
@@ -55,7 +16,6 @@ export type Database = {
           description: string | null
           end_date: string
           id: string
-          poll_options: Json[]
           title: string
           updated_at: string | null
         }
@@ -65,7 +25,6 @@ export type Database = {
           description?: string | null
           end_date: string
           id?: string
-          poll_options: Json[]
           title: string
           updated_at?: string | null
         }
@@ -75,7 +34,6 @@ export type Database = {
           description?: string | null
           end_date?: string
           id?: string
-          poll_options?: Json[]
           title?: string
           updated_at?: string | null
         }
@@ -93,21 +51,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          option: string | null
+          option: string
           poll_id: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          option?: string | null
+          option: string
           poll_id: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          option?: string | null
+          option?: string
           poll_id?: string
           user_id?: string
         }
@@ -124,6 +82,38 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_option: {
+        Row: {
+          count: number
+          created_at: string
+          id: string
+          option: string
+          poll_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          id?: string
+          option: string
+          poll_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          id?: string
+          option?: string
+          poll_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "poll"
             referencedColumns: ["id"]
           },
         ]
@@ -166,7 +156,7 @@ export type Database = {
         Args: {
           title: string
           end_date: string
-          options: Json[]
+          options: string[]
           description: string
         }
         Returns: string
@@ -182,7 +172,6 @@ export type Database = {
           description: string | null
           end_date: string
           id: string
-          poll_options: Json[]
           title: string
           updated_at: string | null
         }

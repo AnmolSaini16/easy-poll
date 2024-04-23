@@ -9,7 +9,7 @@ export async function ActivePollLists() {
 
   return supabase
     .from("poll")
-    .select("*,users(*)")
+    .select("*,poll_option(*)")
     .filter("end_date", "gte", new Date().toISOString())
     .order("created_at", { ascending: true });
 }
@@ -19,7 +19,7 @@ export async function ExpiredPollsList() {
 
   return supabase
     .from("poll")
-    .select("*,users(*)")
+    .select("*,poll_option(*)")
     .filter("end_date", "lte", new Date().toISOString())
     .order("created_at", { ascending: true });
 }
@@ -27,7 +27,7 @@ export async function ExpiredPollsList() {
 export const createPoll = async (payload: {
   title: string;
   end_date: Date;
-  poll_options: { option: string; count: number }[];
+  poll_options: string[];
   description?: string;
 }): Promise<void> => {
   const supabase = createClient();
@@ -47,7 +47,7 @@ export const createPoll = async (payload: {
   }
 };
 
-export const updatePoll = (payload: {
+export const updatePoll = async (payload: {
   update_id: string;
   option_name: string;
 }) => {
@@ -59,13 +59,13 @@ export const updatePoll = (payload: {
   });
 };
 
-export const deletePoll = (pollId: string) => {
+export const deletePoll = async (pollId: string) => {
   const supabase = createClient();
 
   return supabase.from("poll").delete().eq("id", pollId);
 };
 
-export const updatePollDetails = (
+export const updatePollDetails = async (
   payload: {
     title: string;
     end_date: Date;

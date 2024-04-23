@@ -22,11 +22,11 @@ const CarouselCompoenent = () => {
           the mark every time.
         </h4>
         {user && (
-          <Link href="/create-poll">
-            <Button>
+          <Button asChild className="w-fit mx-auto">
+            <Link href="/create-poll">
               <Plus className="h-4 w-4 mr-1" /> Create your poll
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
     </div>

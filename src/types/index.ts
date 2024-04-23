@@ -1,12 +1,9 @@
-import { Json } from "./supabase";
-
 export type IPoll = {
   created_at: string;
-  created_by: string | null;
+  created_by: string;
   description: string | null;
   end_date: string;
   id: string;
-  poll_options: Json[]; //Supabase type issue fron Json field
   title: string;
   updated_at: string | null;
   users: {
@@ -16,3 +13,20 @@ export type IPoll = {
     user_name: string | null;
   } | null;
 };
+
+export type IPolls = {
+  created_at: string;
+  created_by: string;
+  description: string | null;
+  end_date: string;
+  id: string;
+  title: string;
+  updated_at: string | null;
+  poll_option: {
+    count: number;
+    created_at: string;
+    id: string;
+    option: string;
+    poll_id: string;
+  }[];
+}[];

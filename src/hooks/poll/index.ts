@@ -10,23 +10,24 @@ export const useGetPoll = (poll_id: string) => {
   return useQuery({
     queryKey: ["poll-" + poll_id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: pollData } = await supabase
         .from("poll")
-        .select("*,poll_log(*)")
+        .select("*, poll_option(*), poll_log(*)")
         .eq("id", poll_id)
+        .order("id", { referencedTable: "poll_option", ascending: true })
         .single();
 
       return {
-        poll_options: data?.poll_options as { option: string; count: number }[], //Supabase type issue for JSON
-        user_poll_log: data?.poll_log?.[0],
-        isActive: isPollActive(data?.end_date!),
+        pollOptions: pollData?.poll_option,
+        user_poll_log: pollData?.poll_log[0],
+        isPollActive: isPollActive(pollData?.end_date ?? ""),
       };
     },
     staleTime: Infinity,
   });
 };
 
-export const usePollListner = (poll_id: string) => {
+export const usePollOptionListner = (poll_id: string) => {
   const supabase = createClient();
   const queryClient = useQueryClient();
 
@@ -35,15 +36,10 @@ export const usePollListner = (poll_id: string) => {
       .channel("custom-update-channel")
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "poll",
-          filter: "id=eq." + poll_id,
-        },
+        { event: "UPDATE", schema: "public", table: "poll_option" },
         (payload) => {
           queryClient.invalidateQueries({
-            queryKey: ["poll-" + payload.new.id],
+            queryKey: ["poll-" + payload.new.poll_id],
           });
         }
       )

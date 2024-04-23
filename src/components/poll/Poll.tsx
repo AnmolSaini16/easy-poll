@@ -5,11 +5,10 @@ import { AlertCircle, Share } from "lucide-react";
 import toast from "react-hot-toast";
 import { redirect, useRouter } from "next/navigation";
 
-import { IPoll } from "@/types";
 import { Progress } from "../ui/progress";
 import { useUser } from "@/hooks/useUser";
 import { updatePoll } from "@/lib/actions/poll";
-import { useGetPoll, usePollListner } from "@/hooks/poll";
+import { useGetPoll, usePollOptionListner } from "@/hooks/poll";
 import { cn, getHighestOptions } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Alert, AlertTitle } from "../ui/alert";
@@ -17,39 +16,40 @@ import PollLoading from "./PollLoading";
 import { Card, CardContent } from "../ui/card";
 
 type Props = {
-  poll: IPoll;
+  pollId: string;
 };
 
-const Poll = ({ poll }: Props) => {
-  const { data, isLoading } = useGetPoll(poll?.id);
-  const { data: userData } = useUser();
+const Poll = ({ pollId }: Props) => {
   const router = useRouter();
+  const { data: pollData, isLoading } = useGetPoll(pollId);
+  const { data: userData } = useUser();
 
-  usePollListner(poll.id);
+  usePollOptionListner(pollId);
 
   const totalVotes = useMemo(
-    () => data?.poll_options?.reduce((acc, curr) => acc + curr?.count, 0) || 0,
-    [data?.poll_options]
+    () =>
+      pollData?.pollOptions?.reduce((acc, curr) => acc + curr?.count, 0) || 0,
+    [pollData?.pollOptions]
   );
 
   const highestOptions = useMemo(
-    () => getHighestOptions(data?.poll_options ?? []),
-    [data?.poll_options]
+    () => getHighestOptions(pollData?.pollOptions ?? []),
+    [pollData?.pollOptions]
   );
 
-  if (isLoading && !data) {
+  if (isLoading && !pollData) {
     return <PollLoading />;
   }
 
-  if (!data) {
+  if (!pollData) {
     redirect("/");
   }
 
-  const { isActive, user_poll_log, poll_options } = data;
+  const { user_poll_log, pollOptions, isPollActive } = pollData;
 
   const handleShare = () => {
     toast.promise(
-      navigator.clipboard.writeText(location.origin + "/poll/" + poll.id),
+      navigator.clipboard.writeText(location.origin + "/poll/" + pollId),
       {
         loading: "Copying link...",
         success: "Link copied successfully",
@@ -60,7 +60,7 @@ const Poll = ({ poll }: Props) => {
 
   const castVotePromise = async (optionName: string) => {
     const { error } = await updatePoll({
-      update_id: poll.id,
+      update_id: pollId,
       option_name: optionName,
     });
     if (error) {
@@ -79,11 +79,11 @@ const Poll = ({ poll }: Props) => {
     });
   };
 
-  const disablePoll = Boolean(user_poll_log) || !userData || !isActive;
+  const disablePoll = Boolean(user_poll_log) || !userData || !isPollActive;
 
   return (
     <>
-      {!userData && isActive && (
+      {!userData && isPollActive && (
         <div>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-" />
@@ -92,15 +92,15 @@ const Poll = ({ poll }: Props) => {
         </div>
       )}
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className=" space-y-4">
-          {poll_options?.map((option, index) => {
+        <div className="space-y-4">
+          {pollOptions?.map((option) => {
             const percentage =
               totalVotes !== 0
                 ? Math.round((option?.count / totalVotes) * 100)
                 : 0;
 
             const highestOptionAfterPollExpired =
-              highestOptions.includes(option?.option) && !isActive;
+              highestOptions.includes(option?.option) && !isPollActive;
 
             return (
               <div

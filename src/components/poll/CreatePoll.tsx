@@ -86,12 +86,7 @@ export default function CreatePollForm() {
     }
   };
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    const poll_options = options.map((option) => ({
-      option,
-      count: 0,
-    }));
-
-    const payload = { ...data, poll_options };
+    const payload = { ...data };
 
     toast.promise(createPollMutation.mutateAsync(payload), {
       loading: "Creating your poll..",

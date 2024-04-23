@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-import { IPoll } from "@/types";
+import { IPolls } from "@/types";
 import { Card, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 
 type Props = {
-  polls: IPoll[];
+  polls: IPolls;
   isExpired?: boolean;
 };
 
@@ -13,8 +13,7 @@ const PollsList = ({ polls, isExpired = false }: Props) => {
   return (
     <div className="w-full gap-6 mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 grid-flow-dense ">
       {polls.map((poll) => {
-        const totalVotes = poll?.poll_options?.reduce(
-          //@ts-ignore
+        const totalVotes = poll?.poll_option?.reduce(
           (acc, curr) => acc + curr?.count,
           0
         ) as number;
