@@ -17,7 +17,7 @@ const PollDetails = ({ poll }: Props) => {
       <div className="flex justify-between flex-col md:flex-row lg:flex-row xl:flex-row 2xl:flex-row">
         <h4 className="text-lg">
           <span className="text-muted-foreground">Asked by: </span>
-          {poll?.users?.user_name}{" "}
+          {poll?.users?.user_name ?? poll?.users?.email}{" "}
           <span className="text-muted-foreground">on </span>
           {new Date(poll.created_at).toLocaleString(undefined, {
             weekday: "short",
