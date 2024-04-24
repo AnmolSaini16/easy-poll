@@ -8,16 +8,24 @@ import Providers from "@/components/Provider";
 import Navbar from "@/components/navbar/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/common/Footer";
+import { siteConfig } from "@/config/site";
 
 const inter = Nunito({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "EasyPoll",
-    template: "%s - EasyPoll",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: "Create instant, real-time polls for free",
-  keywords: ["nextjs", "react", "react server components", "supabase", "poll"],
+  description: siteConfig.description,
+  keywords: [
+    "nextjs",
+    "react",
+    "react server components",
+    "supabase",
+    "poll",
+    "vote",
+  ],
   authors: [
     {
       name: "anmol",
@@ -25,7 +33,14 @@ export const metadata: Metadata = {
     },
   ],
   creator: "anmol",
-
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteConfig.url,
+    title: siteConfig.name,
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+  },
   icons: {
     icon: "/icon.png",
   },
@@ -41,7 +56,7 @@ export default function RootLayout({
       <body className={cn("bg-background antialiased", inter.className)}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

@@ -72,25 +72,21 @@ const Poll = ({ pollId }: Props) => {
   };
 
   const castVote = async (optionName: string) => {
-    toast.promise(castVotePromise(optionName), {
-      loading: "Voting for " + optionName + "...",
-      error: "Fail to vote for " + optionName,
-      success: "Successfully vote for " + optionName,
-    });
+    if (!userData) {
+      toast.error("Please log in to vote");
+    } else {
+      toast.promise(castVotePromise(optionName), {
+        loading: "Voting for " + optionName + "...",
+        error: "Fail to vote for " + optionName,
+        success: "Successfully vote for " + optionName,
+      });
+    }
   };
 
-  const disablePoll = Boolean(user_poll_log) || !userData || !isPollActive;
+  const disablePoll = Boolean(user_poll_log) || !isPollActive;
 
   return (
     <>
-      {!userData && isPollActive && (
-        <div>
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-" />
-            <AlertTitle> Please log in to vote</AlertTitle>
-          </Alert>
-        </div>
-      )}
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="space-y-4">
           {pollOptions?.map((option) => {
@@ -132,7 +128,7 @@ const Poll = ({ pollId }: Props) => {
           <Card className="bg-muted/40 py-5">
             <CardContent className="text-center space-y-6 md:pt-4">
               {user_poll_log && (
-                <Alert className="bg-transaparent w-fit mx-auto">
+                <Alert className="bg-transaparent w-fit mx-auto border-primary">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>
                     You voted for{" "}

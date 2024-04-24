@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { LogOut, Palette, Plus, User as UserIcon } from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ type Props = {
 const UserDropdown = ({ user }: Props) => {
   const router = useRouter();
   const supabase = createClient();
+  const queryClient = useQueryClient();
   const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -40,6 +42,7 @@ const UserDropdown = ({ user }: Props) => {
       toast.error("Something went wrong while logging out");
     } else {
       location.reload();
+      queryClient.invalidateQueries({ queryKey: ["user-info"] });
     }
   };
 
@@ -48,7 +51,10 @@ const UserDropdown = ({ user }: Props) => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.user_metadata?.avatar_url} alt="@shadcn" />
+            <AvatarImage
+              src={user?.user_metadata?.avatar_url}
+              alt="profile-pic"
+            />
             <AvatarFallback>
               {user?.user_metadata?.name?.slice(0, 2).toUpperCase()}
             </AvatarFallback>

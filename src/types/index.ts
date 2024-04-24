@@ -30,3 +30,12 @@ export type IPolls = {
     poll_id: string;
   }[];
 }[];
+
+export type SiteConfig = {
+  name: string;
+  description: string;
+  url: string;
+  links: {
+    github: string;
+  };
+};

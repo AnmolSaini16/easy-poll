@@ -20,7 +20,7 @@ const PollsList = ({ polls, isExpired = false }: Props) => {
 
         return (
           <Link href={"/poll/" + poll.id} key={poll.id}>
-            <Card className="shadow-md transition-all delay-100 scale-100 relative md:hover:-translate-y-1 hover:cursor-pointer hover:border-primary">
+            <Card className="shadow-md transition-all delay-100 scale-100 relative md:hover:-translate-y-1 md:hover:border-primary hover:cursor-pointer">
               <CardHeader className="space-y-4">
                 <CardTitle className="truncate">{poll.title}</CardTitle>
                 <CardDescription>
