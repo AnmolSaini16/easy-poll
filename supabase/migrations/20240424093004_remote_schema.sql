@@ -1,0 +1,301 @@
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
+
+COMMENT ON SCHEMA "public" IS 'standard public schema';
+
+CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
+
+CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
+
+CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
+
+CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+
+CREATE OR REPLACE FUNCTION "public"."create_poll"("title" "text", "end_date" timestamp without time zone, "options" "text"[], "description" "text") RETURNS "uuid"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    poll_id UUID;
+    option_count INT;
+    i INT;
+BEGIN
+     -- COUNTING THE NUMBER OF OPTIONS
+    option_count := array_length(options, 1);
+
+    -- CHECKING IF THE NUMBER OF OPTIONS IS LESS THAN 2
+    IF option_count < 2 THEN
+        RAISE EXCEPTION 'Number of options must be at least 2';
+    END IF;
+
+    -- INSERTING POLL RECORD
+    INSERT INTO poll (created_by, title, end_date, description)
+    VALUES (auth.uid(), title, end_date, description)
+    RETURNING id INTO poll_id;
+
+    IF FOUND THEN
+        -- INSERTING OPTIONS INTO POLL_OPTION TABLE
+        FOR i IN 1..option_count LOOP
+            INSERT INTO poll_option (poll_id, option)
+            VALUES (poll_id, options[i]);
+        END LOOP;
+    ELSE
+        RAISE EXCEPTION 'Failed to create poll.';
+    END IF;
+
+    RETURN poll_id;
+END;
+$$;
+
+ALTER FUNCTION "public"."create_poll"("title" "text", "end_date" timestamp without time zone, "options" "text"[], "description" "text") OWNER TO "postgres";
+
+CREATE OR REPLACE FUNCTION "public"."handle_new_user_login"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+begin
+ INSERT INTO public.users (id,email,user_name,avatar_url)
+    VALUES (
+      new.id,
+      new.raw_user_meta_data ->>'email',
+      new.raw_user_meta_data ->>'user_name',
+      new.raw_user_meta_data ->>'avatar_url'
+    );
+    RETURN NEW;
+end;
+$$;
+
+ALTER FUNCTION "public"."handle_new_user_login"() OWNER TO "postgres";
+
+CREATE OR REPLACE FUNCTION "public"."update_poll"("update_id" "uuid", "option_name" "text") RETURNS "void"
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE
+    poll_end_date TIMESTAMP;
+    new_count INT;
+BEGIN
+    -- Get the end_date of the poll
+    SELECT end_date INTO poll_end_date FROM poll WHERE id = update_id;
+
+    -- Check if the poll is expired
+    IF poll_end_date < NOW() THEN
+        RAISE EXCEPTION 'Poll is expired and cannot be updated.';
+    END IF;
+
+    -- Check if the poll has already been updated by checking the poll_log table
+    IF EXISTS (
+    SELECT 1 FROM poll_log WHERE poll_id = update_id AND user_id = auth.uid()
+    ) THEN 
+        RAISE EXCEPTION 'Poll has already been updated.';
+    END IF;
+
+     -- UPDATE poll_option
+    UPDATE poll_option
+    SET count = count + 1
+    WHERE poll_id = update_id AND option = option_name
+    RETURNING 1 INTO new_count;
+
+    -- Insert into poll_log table if the update was successful
+    IF (new_count > 0) THEN
+        INSERT INTO poll_log (option, poll_id, user_id) VALUES (option_name, update_id, auth.uid());
+    ELSE
+        RAISE EXCEPTION 'Failed to update poll.';
+    END IF;
+  
+END;
+$$;
+
+ALTER FUNCTION "public"."update_poll"("update_id" "uuid", "option_name" "text") OWNER TO "postgres";
+
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
+
+CREATE TABLE IF NOT EXISTS "public"."poll" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "end_date" timestamp with time zone NOT NULL,
+    "updated_at" timestamp with time zone,
+    "created_by" "uuid" NOT NULL
+);
+
+ALTER TABLE "public"."poll" OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "public"."poll_log" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "option" "text" NOT NULL,
+    "poll_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL
+);
+
+ALTER TABLE "public"."poll_log" OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "public"."poll_option" (
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "option" "text" NOT NULL,
+    "poll_id" "uuid" NOT NULL,
+    "count" numeric DEFAULT '0'::numeric NOT NULL,
+    "id" bigint NOT NULL
+);
+
+ALTER TABLE "public"."poll_option" OWNER TO "postgres";
+
+ALTER TABLE "public"."poll_option" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME "public"."poll_option_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+CREATE TABLE IF NOT EXISTS "public"."users" (
+    "id" "uuid" NOT NULL,
+    "email" "text",
+    "user_name" "text",
+    "avatar_url" "text"
+);
+
+ALTER TABLE "public"."users" OWNER TO "postgres";
+
+ALTER TABLE ONLY "public"."poll_log"
+    ADD CONSTRAINT "poll_log_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."poll_option"
+    ADD CONSTRAINT "poll_option_id_key" UNIQUE ("id");
+
+ALTER TABLE ONLY "public"."poll_option"
+    ADD CONSTRAINT "poll_option_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."poll"
+    ADD CONSTRAINT "poll_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."users"
+    ADD CONSTRAINT "users_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."poll"
+    ADD CONSTRAINT "public_poll_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."poll_log"
+    ADD CONSTRAINT "public_poll_log_poll_id_fkey" FOREIGN KEY ("poll_id") REFERENCES "public"."poll"("id") ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."poll_log"
+    ADD CONSTRAINT "public_poll_log_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."poll_option"
+    ADD CONSTRAINT "public_poll_options_poll_id_fkey" FOREIGN KEY ("poll_id") REFERENCES "public"."poll"("id") ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."users"
+    ADD CONSTRAINT "users_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+CREATE POLICY "Enable Delete for users who based on user_id" ON "public"."poll_log" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+CREATE POLICY "Enable Delete for users who created" ON "public"."poll" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "created_by"));
+
+CREATE POLICY "Enable Insert for users who based on user_id" ON "public"."poll_log" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+CREATE POLICY "Enable Select for users who based on user_id" ON "public"."poll_log" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+CREATE POLICY "Enable Update for authenticated users only" ON "public"."poll_option" FOR UPDATE TO "authenticated" USING (true);
+
+CREATE POLICY "Enable Update for users who based on user_id" ON "public"."poll_log" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+CREATE POLICY "Enable Update for users who created" ON "public"."poll" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "created_by"));
+
+CREATE POLICY "Enable delete for authenticated users only" ON "public"."users" FOR DELETE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "id"));
+
+CREATE POLICY "Enable insert for authenticated users only" ON "public"."poll_option" FOR INSERT TO "authenticated" WITH CHECK (true);
+
+CREATE POLICY "Enable insert for authenticated users only" ON "public"."users" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "id"));
+
+CREATE POLICY "Enable insert for users who created" ON "public"."poll" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "created_by"));
+
+CREATE POLICY "Enable read access for all users" ON "public"."poll" FOR SELECT USING (true);
+
+CREATE POLICY "Enable read access for all users" ON "public"."poll_option" FOR SELECT USING (true);
+
+CREATE POLICY "Enable read access for all users" ON "public"."users" FOR SELECT USING (true);
+
+CREATE POLICY "Enable update for authenticated users only" ON "public"."users" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "id"));
+
+ALTER TABLE "public"."poll" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "public"."poll_log" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "public"."poll_option" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "public"."users" ENABLE ROW LEVEL SECURITY;
+
+ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."poll_option";
+
+GRANT USAGE ON SCHEMA "public" TO "postgres";
+GRANT USAGE ON SCHEMA "public" TO "anon";
+GRANT USAGE ON SCHEMA "public" TO "authenticated";
+GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."create_poll"("title" "text", "end_date" timestamp without time zone, "options" "text"[], "description" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."create_poll"("title" "text", "end_date" timestamp without time zone, "options" "text"[], "description" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."create_poll"("title" "text", "end_date" timestamp without time zone, "options" "text"[], "description" "text") TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."handle_new_user_login"() TO "anon";
+GRANT ALL ON FUNCTION "public"."handle_new_user_login"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."handle_new_user_login"() TO "service_role";
+
+GRANT ALL ON FUNCTION "public"."update_poll"("update_id" "uuid", "option_name" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."update_poll"("update_id" "uuid", "option_name" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_poll"("update_id" "uuid", "option_name" "text") TO "service_role";
+
+GRANT ALL ON TABLE "public"."poll" TO "anon";
+GRANT ALL ON TABLE "public"."poll" TO "authenticated";
+GRANT ALL ON TABLE "public"."poll" TO "service_role";
+
+GRANT ALL ON TABLE "public"."poll_log" TO "anon";
+GRANT ALL ON TABLE "public"."poll_log" TO "authenticated";
+GRANT ALL ON TABLE "public"."poll_log" TO "service_role";
+
+GRANT ALL ON TABLE "public"."poll_option" TO "anon";
+GRANT ALL ON TABLE "public"."poll_option" TO "authenticated";
+GRANT ALL ON TABLE "public"."poll_option" TO "service_role";
+
+GRANT ALL ON SEQUENCE "public"."poll_option_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."poll_option_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."poll_option_id_seq" TO "service_role";
+
+GRANT ALL ON TABLE "public"."users" TO "anon";
+GRANT ALL ON TABLE "public"."users" TO "authenticated";
+GRANT ALL ON TABLE "public"."users" TO "service_role";
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "service_role";
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "service_role";
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "service_role";
+
+RESET ALL;
