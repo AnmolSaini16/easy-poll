@@ -35,7 +35,7 @@ Yarn
 
 1. Clone the repo
    ```sh
-   git clone (https://github.com/AnmolSaini16/easy-poll.git)
+   git clone https://github.com/AnmolSaini16/easy-poll.git
    ```
 2. Install NPM packages
    ```sh
