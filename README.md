@@ -1,11 +1,22 @@
 # Easy Poll
-## Create instant, real-time polls for free!
+## Easy Poll is a Create instant, real-time polls for free!
+
+## 🚀 Features
+
+- 🤩 Free
+- 📖 Open-Source
+- 🔒 Google and Github Authentication
+- ⏳ Realtime votes
+
 ## Made using Supabase.
+
 * Supabase Auth
 * Supabase DB
 * Supabase Realtime
 
+
 ## Frontend Technolgies
+
 * Next JS
 * Tailwind CSS
 * Shadcn
