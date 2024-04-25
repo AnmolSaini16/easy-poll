@@ -1,11 +1,11 @@
-#Easy Poll
-##Create instant, real-time polls for free!
-##Made using Supabase.
+# Easy Poll
+## Create instant, real-time polls for free!
+## Made using Supabase.
 * Supabase Auth
 * Supabase DB
 * Supabase Realtime
 
-##Frontend Technolgies
+## Frontend Technolgies
 * Next JS
 * Tailwind CSS
 * Shadcn
