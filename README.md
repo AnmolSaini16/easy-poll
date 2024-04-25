@@ -1,5 +1,5 @@
 # Easy Poll
-## Easy Poll is a Create instant, real-time polls for free!
+## Create instant, real-time polls for free!
 
 ## 🚀 Features
 
@@ -46,10 +46,7 @@
    ```
 
 ### Supabase Setup
-
-```sql
-
-```
+* Apply the migrations from supabase/migrations folder
 
 ## ➕ Contributing
 
