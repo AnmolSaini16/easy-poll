@@ -23,14 +23,6 @@
 
 ## 🌎 Setup
 
-### Prerequisites
-
-Yarn
-
-- ```sh
-  npm install --global yarn
-  ```
-
 ### Development
 
 1. Clone the repo
@@ -42,7 +34,13 @@ Yarn
    cd keypress
    npm install
    ```
-3. Run local development instance
+3. Setup your Supabase environment .env
+   ```sh
+   NEXT_PUBLIC_SUPABASE_URL=<SUPABASE_URL>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUPABASE_KEY>
+   ```
+  
+4. Run local development instance
    ```sh
    npm run dev
    ```
