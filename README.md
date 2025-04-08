@@ -1,5 +1,6 @@
-# Easy Poll
-## Create instant, real-time polls for free!
+# 📊 Easy Poll - Create instant, real-time polls for free!
+
+![easy-poll demo](https://github.com/user-attachments/assets/46078e75-7441-4728-ba0f-9144efc68c23)
 
 ## 🚀 Features
 
